@@ -1,0 +1,29 @@
+Commands:
+
+- [SearchTerm]
+    - Type a product into the command line that you would like to search on Amazon.
+
+Parameters:
+- [lowest|highest], default = lowest
+    - determines if you would like to sort ProductPrice, NumStars and NumReviews by descending(highest) or ascending(lowest) order.
+
+- [price|reviews|stars], default=price
+    - Whether to sort/aggregate by ProductPrice, NumStars, or NumReviews
+    - You may sort by 1 or 2 parameters. (Ex: SearchTerm lowest price highest reviews OR SearchTerm lowest stars)
+
+- <integer>, default=10
+    - List <limit> matches.
+
+- [barplot], default=none
+    - Creates a bar plot for whichever parameter you list.
+
+Example Commands:
+- watches lowest price highest reviews 10
+- iPhone cases lowest price highest stars 20
+- microwave highest reviews highest stars 15
+- bar stool lowest price 10
+- cake stand highest reviews 20
+- rug highest stars 5
+
+Default Command:
+- SearchTerm lowest price 10
