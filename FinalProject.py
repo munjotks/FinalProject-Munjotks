@@ -191,9 +191,9 @@ def create_db():
         "Id" INTEGER PRIMARY KEY AUTOINCREMENT,
 	    "SearchTermCategory"	TEXT NOT NULL,
 	    "ProductName"	TEXT NOT NULL,
-	    "ProductPrice"	INTEGER,
-	    "NumStars"	INTEGER,
-	    "NumReviews"	INTEGER,
+	    "ProductPrice"	NUMERIC,
+	    "NumStars"	NUMERIC,
+	    "NumReviews"	NUMERIC,
 	    "ProductURL"	TEXT    
         )
     '''
@@ -256,7 +256,7 @@ def process_command(command):
     cursor = connection.cursor()
 
     # just price
-    if 'price' in command and 'reviews' not in command and 'stars' not in command:
+    if 'price' in command and 'review' not in command and 'star' not in command:
         if 'highest' in command:
             price_query = cursor.execute("SELECT ProductName, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice DESC LIMIT ?", (numresults,))
         else:
@@ -274,98 +274,102 @@ def process_command(command):
         else:
             stars_query = cursor.execute("SELECT ProductName, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars ASC LIMIT ?", (numresults,))
     # price and reviews
-    elif 'price' in command and 'reviews' in command and 'stars' not in command:
+    elif 'price' in command and 'review' in command and 'star' not in command:
         splitcommand = command.split()
         if splitcommand[1] == 'price':
             if splitcommand[0] == 'lowest':
                 if splitcommand[2] == 'highest':
+                    #lowest price highest review
                     price_review_query = cursor.execute("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice ASC, NumReviews DESC LIMIT ?", (numresults,))
                 else:
-                    price_review_query = ("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice ASC, NumReviews ASC LIMIT ?", (numresults,))
+                    #lowest price lowest review
+                    price_review_query = cursor.execute("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice ASC, NumReviews ASC LIMIT ?", (numresults,))
             else:
                 if splitcommand[2] == 'highest':
-                    price_review_query = ("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice DESC, NumReviews DESC LIMIT ?", (numresults,))
-                else: 
-                    price_review_query = ("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice DESC, NumReviews ASC LIMIT ?", (numresults,))
+                    #highest price highest review
+                    price_review_query = cursor.execute("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice DESC, NumReviews DESC LIMIT ?", (numresults,))
+                else:
+                    #highest price lowest review
+                    price_review_query = cursor.execute("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice DESC, NumReviews ASC LIMIT ?", (numresults,))
         elif splitcommand[1] == 'review':
             if splitcommand[0] == 'lowest':
                 if splitcommand[2] == 'lowest':
-                    price_review_query = ("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews ASC, ProductPrice ASC LIMIT ?", (numresults,))
+                    price_review_query = cursor.execute("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews ASC, ProductPrice ASC LIMIT ?", (numresults,))
                 else:
-                    price_review_query = ("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews ASC, ProductPrice DESC LIMIT ?", (numresults,))
+                    price_review_query = cursor.execute("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews ASC, ProductPrice DESC LIMIT ?", (numresults,))
             else:
                 #highest review lowest price
                 if splitcommand[2] == 'lowest':
-                    price_review_query = ("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews DESC, ProductPrice ASC LIMIT ?", (numresults,))
+                    price_review_query = cursor.execute("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews DESC, ProductPrice ASC LIMIT ?", (numresults,))
                 else:
                     #highest review highest price
-                    price_review_query = ("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews DESC, ProductPrice DESC LIMIT ?", (numresults,))         
+                    price_review_query = cursor.execute("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews DESC, ProductPrice DESC LIMIT ?", (numresults,))         
     # price and stars
-    elif 'price' in command and 'stars' in command and 'reviews' not in command:
+    elif 'price' in command and 'star' in command and 'review' not in command:
         splitcommand = command.split()
         if splitcommand[1] == 'price':
             if splitcommand[0] == 'lowest':
                 if splitcommand[2] == 'lowest':
                     #lowest price lowest stars
-                    price_stars_query = ("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice ASC, NumStars ASC LIMIT ?", (numresults,))
+                    price_stars_query = cursor.execute("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice ASC, NumStars ASC LIMIT ?", (numresults,))
                 else:
                     #lowest price highest stars
-                    price_stars_query = ("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice ASC, NumStars DESC LIMIT ?", (numresults,))
+                    price_stars_query = cursor.execute("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice ASC, NumStars DESC LIMIT ?", (numresults,))
             else:
                 if splitcommand[2] == 'highest':
                     #highest price highest stars
-                    price_stars_query = ("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice DESC, NumStars DESC LIMIT ?", (numresults,))
+                    price_stars_query = cursor.execute("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice DESC, NumStars DESC LIMIT ?", (numresults,))
                 else: 
                     #highest price lowest stars
-                    price_stars_query = ("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice DESC, NumStars ASC LIMIT ?", (numresults,))
+                    price_stars_query = cursor.execute("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY ProductPrice DESC, NumStars ASC LIMIT ?", (numresults,))
         elif splitcommand[1] == 'stars':
             if splitcommand[0] == 'lowest':
                 if splitcommand[2] == 'lowest':
                     #lowest stars lowest price
-                    price_stars_query = ("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars ASC, ProductPrice ASC LIMIT ?", (numresults,))
+                    price_stars_query = cursor.execute("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars ASC, ProductPrice ASC LIMIT ?", (numresults,))
                 else: 
                     #lowest stars highest price
-                    price_stars_query = ("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars ASC, ProductPrice DESC LIMIT ?", (numresults,))
+                    price_stars_query = cursor.execute("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars ASC, ProductPrice DESC LIMIT ?", (numresults,))
             else:
                 if splitcommand[2] == 'lowest':
                     #highest stars lowest price
-                    price_stars_query = ("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars DESC, ProductPrice ASC LIMIT ?", (numresults,))
+                    price_stars_query = cursor.execute("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars DESC, ProductPrice ASC LIMIT ?", (numresults,))
                 else: 
                     #highest stars highest price
-                    price_stars_query = ("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars DESC, ProductPrice DESC LIMIT ?", (numresults,))
+                    price_stars_query = cursor.execute("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars DESC, ProductPrice DESC LIMIT ?", (numresults,))
     # reviews and stars
-    elif 'reviews' in command and 'stars' in command and 'price' not in command:
+    elif 'review' in command and 'star' in command and 'price' not in command:
         splitcommand = command.split()
         if splitcommand[1] == 'reviews':
             if splitcommand[0] == 'highest':
                 if splitcommand[2] == 'highest':
                     #highest reviews highest stars
-                    review_stars_query = ("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews DESC, NumStars DESC LIMIT ?", (numresults,))
+                    review_stars_query = cursor.execute("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews DESC, NumStars DESC LIMIT ?", (numresults,))
                 else:
                     #highest reviews lowest stars
-                    reviews_stars_query = ("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews DESC, NumStars ASC LIMIT ?", (numresults,))
+                    reviews_stars_query = cursor.execute("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews DESC, NumStars ASC LIMIT ?", (numresults,))
             else:
                 if splitcommand[2] == 'lowest':
                     #lowest reviews lowest stars
-                    reviews_stars_query = ("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews ASC, NumStars ASC LIMIT ?", (numresults,))
+                    reviews_stars_query = cursor.execute("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews ASC, NumStars ASC LIMIT ?", (numresults,))
                 else:
                     #lowest reviews highest stars
-                    reviews_stars_query = ("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews ASC, NumStars DESC LIMIT ?", (numresults,))
+                    reviews_stars_query = cursor.execute("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews ASC, NumStars DESC LIMIT ?", (numresults,))
         elif splitcommand[1] == 'stars':
             if splitcommand[0] == 'highest':
                 if splitcommand[2] == 'highest':
                     #highest stars highest reviews
-                    reviews_stars_query = ("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars DESC, NumReviews DESC LIMIT ?", (numresults,))
+                    reviews_stars_query = cursor.execute("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars DESC, NumReviews DESC LIMIT ?", (numresults,))
                 else:
                     #highest stars lowest reviews
-                    reviews_stars_query = ("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars DESC, NumReviews ASC LIMIT ?", (numresults,))
+                    reviews_stars_query = cursor.execute("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars DESC, NumReviews ASC LIMIT ?", (numresults,))
             else:
                 if splitcommand[2] == 'highest':
                     #lowest stars highest reviews
-                    reviews_stars_query = ("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars ASC, NumReviews DESC LIMIT ?", (numresults,))
+                    reviews_stars_query = cursor.execute("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars ASC, NumReviews DESC LIMIT ?", (numresults,))
                 else:
                     #lowest stars lowest reviews
-                    reviews_stars_query = ("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars ASC, NumReviews ASC LIMIT ?", (numresults,))
+                    reviews_stars_query = cursor.execute("SELECT ProductName, NumReviews, NumStars, ProductPrice, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars ASC, NumReviews ASC LIMIT ?", (numresults,))
     productdata = cursor.fetchall()
     connection.close()
     return productdata
@@ -391,9 +395,9 @@ def printing_results_of_command(productdata, command):
             fig = go.Figure(data=scatter_data, layout=basic_layout)
             fig.show()
         else:
-            row = " {ProductName:<16s}  {ProductPrice:.2f}  {NumReviews:.2f}  {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            row = " {ProductName:<16s}  {ProductPrice}  {NumReviews}  {SearchTermCategory:<16s}  {ProductURL:<10s}".format
             for product in productdata:
-                print(row(ProductName=product[0][:20], ProductPrice=product[1], NumReviews=product[2], SearchTermCategory=product[3][:20], ProductURL=product[4]))
+                print(row(ProductName=product[0][:15], ProductPrice=product[1], NumReviews=product[2], SearchTermCategory=product[3][:20], ProductURL=product[4]))
     elif 'price' in command and 'stars' in command and 'reviews' not in command:
         if 'graph' in command:
             names = []
@@ -403,7 +407,7 @@ def printing_results_of_command(productdata, command):
                 names.append(product[0])
                 prices.append(product[1])
                 stars.append(product[2])
-            scatter_data = go.scatter(
+            scatter_data = go.Scatter(
                 x=prices,
                 y=stars,
                 text=names,
@@ -414,9 +418,9 @@ def printing_results_of_command(productdata, command):
             fig = go.Figure(data=scatter_data, layout=basic_layout)
             fig.show()
         else:
-            row = " {ProductName:<16s}  {ProductPrice:.2f}  {NumStars:.2f}  {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            row = "{ProductName:<16s}  {ProductPrice}  {NumStars}  {SearchTermCategory:<16s}  {ProductURL:<10s}".format
             for product in productdata:
-                print(row(ProductName=product[0][:20], ProductPrice=product[1], NumStars=product[2], SearchTermCategory=product[3][:20], ProductURL=product[4]))
+                print(row(ProductName=product[0][:15], ProductPrice=product[1], NumStars=product[2], SearchTermCategory=product[3][:20], ProductURL=product[4]))
     elif 'stars' in command and 'reviews' in command and 'price' not in command:
         if 'graph' in command:
             names = []
@@ -437,9 +441,9 @@ def printing_results_of_command(productdata, command):
             fig = go.Figure(data=scatter_data, layout=basic_layout)
             fig.show()
         else:
-            row = " {ProductName:<16s}  {NumReviews:.2f}  {NumStars:.2f} {ProductPrice:.2f} {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            row = " {ProductName:<16s}  {NumReviews}  {NumStars} {ProductPrice} {SearchTermCategory:<16s}  {ProductURL:<10s}".format
             for product in productdata:
-                print(row(ProductName=product[0][:20], NumReviews=product[1], NumStars=product[2], ProductPrice=product[3], SearchTermCategory=product[4][:20], ProductURL=product[5]))
+                print(row(ProductName=product[0][:15], NumReviews=product[1], NumStars=product[2], ProductPrice=product[3], SearchTermCategory=product[4][:20], ProductURL=product[5]))
     elif 'price' in command and 'stars' not in command and 'reviews' not in command:
         if 'graph' in command:
             xaxis = []
@@ -452,9 +456,9 @@ def printing_results_of_command(productdata, command):
             fig = go.Figure(data=barsbarplot, layout=basic_layout)
             fig.show()
         else:
-            row = " {ProductName:<16s} {ProductPrice:.2f} {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            row = " {ProductName:<16s} {ProductPrice} {SearchTermCategory:<16s}  {ProductURL:<10s}".format
             for product in productdata:
-                print(row(ProductName=product[0][:20], ProductPrice=product[1], SearchTermCategory=product[2][:20], ProductURL=product[3]))
+                print(row(ProductName=product[0][:15], ProductPrice=product[1], SearchTermCategory=product[2][:20], ProductURL=product[3]))
     elif 'stars' in command and 'price' not in command and 'reviews' not in command:
         if 'graph' in command:
             xaxis = []
@@ -467,9 +471,9 @@ def printing_results_of_command(productdata, command):
             fig = go.Figure(data=barsbarplot, layout=basic_layout)
             fig.show()
         else:
-            row = " {ProductName:<16s} {NumStars:.2f} {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            row = " {ProductName:<16s} {NumStars} {SearchTermCategory:<16s}  {ProductURL:<10s}".format
             for product in productdata:
-                print(row(ProductName=product[0][:20], NumStars=product[1], SearchTermCategory=product[2][:20], ProductURL=product[3]))
+                print(row(ProductName=product[0][:15], NumStars=product[1], SearchTermCategory=product[2][:20], ProductURL=product[3]))
     elif 'reviews' in command and 'stars' not in command and 'price' not in command:
         if 'graph' in command:
             xaxis = []
@@ -482,9 +486,9 @@ def printing_results_of_command(productdata, command):
             fig = go.Figure(data=barsbarplot, layout=basic_layout)
             fig.show()
         else:
-            row = " {ProductName:<16s} {NumReviews:.2f} {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            row = " {ProductName:<16s} {NumReviews} {SearchTermCategory:<16s}  {ProductURL:<10s}".format
             for product in productdata:
-                print(row(ProductName=product[0][:20], NumReviews=product[1], SearchTermCategory=product[2][:20], ProductURL=product[3]))
+                print(row(ProductName=product[0][:15], NumReviews=product[1], SearchTermCategory=product[2][:20], ProductURL=product[3]))
 
 def interactive_prompt():
     help_text = load_help_text()
@@ -523,8 +527,9 @@ def interactive_prompt():
 
         #extract data from database by user command
         datafromsqlite = process_command(response)
+        # print(datafromsqlite[0])
 
-        #displaying results from user command
+        # displaying results from user command
         displayresults = printing_results_of_command(datafromsqlite, response)
 
     return displayresults
