@@ -76,7 +76,6 @@ def create_url(searchterm):
 
 
 def get_next_page_url(soup):
-    # next_page = soup.find(class_='a-normal').find('a')['href']
     find_links = soup.find_all(class_='celwidget slot=MAIN template=PAGINATION widgetId=pagination-button')
     for link in find_links:
         next_page_text = link.find_all(class_='a-last')
@@ -154,6 +153,7 @@ def parse_each_product(item, searchterm):
     try:
         price1 = item.find('span', 'a-price')
         price = price1.find('span', 'a-offscreen').text
+        price = price.strip('$')
     except AttributeError:
         return
     
@@ -235,13 +235,17 @@ def load_help_text():
 
 def print_ele(response):
     for ele in response:
-        if ele == 'highest' or ele == 'lowest':
+        if ele == 'highest' or ele == 'lowest' or ele == 'graph':
             return
         yield ele
 
 def process_command(command):
     command = command.lower()    
     digit = any(i.isdigit() for i in command)
+
+    if 'reviews' in command and 'stars' in command and 'price' in command:
+        print("Command not recognized: Please input only 2 variation of parameters ")
+        raise SystemExit(0)
 
     if digit == False:
         numresults = 10
@@ -298,6 +302,7 @@ def process_command(command):
                     price_review_query = ("SELECT ProductName, ProductPrice, NumReviews, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumReviews DESC, ProductPrice DESC LIMIT ?", (numresults,))         
     # price and stars
     elif 'price' in command and 'stars' in command and 'reviews' not in command:
+        splitcommand = command.split()
         if splitcommand[1] == 'price':
             if splitcommand[0] == 'lowest':
                 if splitcommand[2] == 'lowest':
@@ -330,6 +335,7 @@ def process_command(command):
                     price_stars_query = ("SELECT ProductName, ProductPrice, NumStars, SearchTermCategory, ProductURL FROM Products GROUP BY ProductURL ORDER BY NumStars DESC, ProductPrice DESC LIMIT ?", (numresults,))
     # reviews and stars
     elif 'reviews' in command and 'stars' in command and 'price' not in command:
+        splitcommand = command.split()
         if splitcommand[1] == 'reviews':
             if splitcommand[0] == 'highest':
                 if splitcommand[2] == 'highest':
@@ -364,6 +370,122 @@ def process_command(command):
     connection.close()
     return productdata
 
+def printing_results_of_command(productdata, command):
+    if 'price' in command and 'review' in command and 'stars' not in command:
+        if 'graph' in command:
+            names = []
+            prices = []
+            numreviews = []
+            for product in productdata:
+                names.append(product[0])
+                prices.append(product[1])
+                numreviews.append(product[2])
+            scatter_data = go.Scatter(
+                x=numreviews,
+                y=prices,
+                text=names,
+                marker={'symbol':'circle', 'size':20, 'color':'green'},
+                mode='markers+text',
+                textposition='top center')
+            basic_layout = go.Layout(title="Amazon Product Prices vs Number of Reviews")
+            fig = go.Figure(data=scatter_data, layout=basic_layout)
+            fig.show()
+        else:
+            row = " {ProductName:<16s}  {ProductPrice:.2f}  {NumReviews:.2f}  {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            for product in productdata:
+                print(row(ProductName=product[0][:20], ProductPrice=product[1], NumReviews=product[2], SearchTermCategory=product[3][:20], ProductURL=product[4]))
+    elif 'price' in command and 'stars' in command and 'reviews' not in command:
+        if 'graph' in command:
+            names = []
+            prices = []
+            stars = []
+            for product in productdata:
+                names.append(product[0])
+                prices.append(product[1])
+                stars.append(product[2])
+            scatter_data = go.scatter(
+                x=prices,
+                y=stars,
+                text=names,
+                marker={'symbol':'circle', 'size':20, 'color':'green'},
+                mode='markers+text',
+                textposition='top center')
+            basic_layout = go.Layout(title="Amazon Product Prices vs Number of Stars(Rating)")
+            fig = go.Figure(data=scatter_data, layout=basic_layout)
+            fig.show()
+        else:
+            row = " {ProductName:<16s}  {ProductPrice:.2f}  {NumStars:.2f}  {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            for product in productdata:
+                print(row(ProductName=product[0][:20], ProductPrice=product[1], NumStars=product[2], SearchTermCategory=product[3][:20], ProductURL=product[4]))
+    elif 'stars' in command and 'reviews' in command and 'price' not in command:
+        if 'graph' in command:
+            names = []
+            stars = []
+            numreviews = []
+            for product in productdata:
+                names.append(product[0])
+                stars.append(product[2])
+                numreviews.append(product[1])
+            scatter_data = go.scatter(
+                x=stars,
+                y=numreviews,
+                text=names,
+                marker={'symbol':'circle', 'size':20, 'color':'green'},
+                mode='markers+text',
+                textposition='top center')
+            basic_layout = go.Layout(title="Number of Reviews for Amazon Products vs Amazon Product Rating")
+            fig = go.Figure(data=scatter_data, layout=basic_layout)
+            fig.show()
+        else:
+            row = " {ProductName:<16s}  {NumReviews:.2f}  {NumStars:.2f} {ProductPrice:.2f} {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            for product in productdata:
+                print(row(ProductName=product[0][:20], NumReviews=product[1], NumStars=product[2], ProductPrice=product[3], SearchTermCategory=product[4][:20], ProductURL=product[5]))
+    elif 'price' in command and 'stars' not in command and 'reviews' not in command:
+        if 'graph' in command:
+            xaxis = []
+            yaxis = []
+            for product in productdata:
+                xaxis.append(product[0])
+                yaxis.append(product[1])
+            barsbarplot = go.Bar(x=xaxis, y=yaxis)
+            basic_layout = go.Layout(title="Amazon Product Prices")
+            fig = go.Figure(data=barsbarplot, layout=basic_layout)
+            fig.show()
+        else:
+            row = " {ProductName:<16s} {ProductPrice:.2f} {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            for product in productdata:
+                print(row(ProductName=product[0][:20], ProductPrice=product[1], SearchTermCategory=product[2][:20], ProductURL=product[3]))
+    elif 'stars' in command and 'price' not in command and 'reviews' not in command:
+        if 'graph' in command:
+            xaxis = []
+            yaxis = []
+            for product in productdata:
+                xaxis.append(product[0])
+                yaxis.append(product[1])
+            barsbarplot = go.Bar(x=xaxis, y=yaxis)
+            basic_layout = go.Layout(title="Amazon Product Stars out of 5")
+            fig = go.Figure(data=barsbarplot, layout=basic_layout)
+            fig.show()
+        else:
+            row = " {ProductName:<16s} {NumStars:.2f} {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            for product in productdata:
+                print(row(ProductName=product[0][:20], NumStars=product[1], SearchTermCategory=product[2][:20], ProductURL=product[3]))
+    elif 'reviews' in command and 'stars' not in command and 'price' not in command:
+        if 'graph' in command:
+            xaxis = []
+            yaxis = []
+            for product in productdata:
+                xaxis.append(product[0])
+                yaxis.append(product[1])
+            barsbarplot = go.Bar(x=xaxis, y=yaxis)
+            basic_layout = go.Layout(title="Amazon Products by Number of Reviews")
+            fig = go.Figure(data=barsbarplot, layout=basic_layout)
+            fig.show()
+        else:
+            row = " {ProductName:<16s} {NumReviews:.2f} {SearchTermCategory:<16s}  {ProductURL:<16s}".format
+            for product in productdata:
+                print(row(ProductName=product[0][:20], NumReviews=product[1], SearchTermCategory=product[2][:20], ProductURL=product[3]))
+
 def interactive_prompt():
     help_text = load_help_text()
     response = ''
@@ -374,6 +496,7 @@ def interactive_prompt():
             continue
         response = response.lower().split(' ')
         searchwords = list(print_ele(response))
+
         # Create Command to lookup data in database [response]
         for x in searchwords:
             if x in response:
@@ -382,22 +505,29 @@ def interactive_prompt():
             response = 'lowest price 10'
         else:
             response = " ".join(response)
+
+        if response == 'graph':
+            response = 'lowest price 10 graph'
         
-        # Create a string of words from list for create_url Function [searchterm]
+        # # Create a string of words from list for create_url Function [searchterm]
         searchterm = " ".join(searchwords)
         searchpageurl = create_url(searchterm)
         
-        # crawl and scrape amazon pages to extract lists of products when a specific query is searched
+        # # crawl and scrape amazon pages to extract lists of products when a specific query is searched
         productlists = get_product_instance(searchpageurl, searchterm)
         create_csv(productlists)
 
-        # # Create a database to pull information from
+        # # # Create a database to pull information from
         create_db()
         load_products()
 
-        
+        #extract data from database by user command
+        datafromsqlite = process_command(response)
 
+        #displaying results from user command
+        displayresults = printing_results_of_command(datafromsqlite, response)
 
+    return displayresults
 
 if __name__ == "__main__":
     interactive_prompt()

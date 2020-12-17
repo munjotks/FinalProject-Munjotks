@@ -14,8 +14,8 @@ Parameters:
 - <integer>, default=10
     - List <limit> matches.
 
-- [barplot], default=none
-    - Creates a bar plot for whichever parameter you list.
+- [graph], default=none
+    - Creates a scatter plot or bar plot for whichever parameter you list.
 
 Example Commands:
 - watches lowest price highest reviews 10
